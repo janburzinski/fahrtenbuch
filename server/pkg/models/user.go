@@ -2,32 +2,40 @@ package models
 
 import (
 	"errors"
+	"log"
 
 	"gorm.io/gorm"
 )
 
-const (
-	RankOwner  = "owner"
-	RankEditor = "editor"
-	RankUser   = "user"
-)
+var validRanks = map[string]bool{
+	"owner":  true,
+	"editor": true,
+	"user":   true,
+	"":       true,
+}
 
 type User struct {
 	gorm.Model
 	Fullname string `json:"fullname" binding:"required"`
-	Email    string `json:"email" binding:"required" gorm:"unique,not null"`
+	Email    string `json:"email" binding:"required" gorm:"unique;not null"`
 	Phone    string `json:"phone" binding:"required"`
-	Password string `json:"password" binding:"required"`
+	Password string `json:"password" binding:"required" gorm:"not null"`
 
 	//organisation
-	OrganisationID *uint         `json:"organisation_id"`
-	Organisation   *Organisation `gorm:"foreignkey:OrganisationID"`
-	Rank           string        `json:"rank"` // used for permission inside the organisation
+	OrganisationID      *uint
+	Organisation        *Organisation `gorm:"foreignKey:OrganisationID;references:ID"`
+	Rank                string
+	OwnedOrganisationID *uint
+	OwnedOrganisation   *Organisation `gorm:"foreignKey:OwnedOrganisationID;references:ID"`
+
+	//cars
+	Cars []Cars `gorm:"foreignKey:UserID"`
 }
 
 func (u *User) BeforeSave(tx *gorm.DB) (err error) {
 	//make use that the rank value is something valid
-	if u.Rank != RankOwner && u.Rank != RankEditor && u.Rank != RankUser && u.Rank != "" {
+	if !validRanks[u.Rank] {
+		log.Printf("Error: Invalid rank value %s", u.Rank)
 		return errors.New("invalid rank value")
 	}
 	return nil

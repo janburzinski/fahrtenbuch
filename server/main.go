@@ -2,6 +2,7 @@ package main
 
 import (
 	"fahrtenbuch/pkg/db"
+	"fahrtenbuch/pkg/redis"
 	"fahrtenbuch/pkg/routes"
 	"log"
 	"os"
@@ -27,6 +28,16 @@ func main() {
 
 	// init postgres connection
 	db.Init()
+
+	// init redis connection
+	client := redis.Connect()
+	rdb := redis.Initialize(client)
+	if rdb == nil {
+		log.Fatal("Error while connecting to redis!!!!")
+		return
+	}
+
+	defer rdb.Close()
 
 	// init api routes
 	routes.SetupRoutes(app)

@@ -14,6 +14,8 @@ var DB *gorm.DB
 
 // initialize database connection
 func Init() {
+	log.Println("Establishing Database connection...")
+
 	username := os.Getenv("POSTGRES_USER")
 	host := os.Getenv("POSTGRES_HOST")
 	databaseName := os.Getenv("POSTGRES_DATABASE")
@@ -25,18 +27,37 @@ func Init() {
 		sslmode = "require"
 	}
 
-	dns := fmt.Sprintf("user=%s password=%s host=%s port=%s dbname=%s sslmode=%s", username, password, host, port, databaseName, sslmode)
+	dsn := fmt.Sprintf("user=%s password=%s host=%s port=%s dbname=%s sslmode=%s",
+		username, password, host, port, databaseName, sslmode)
 
-	DB, err := gorm.Open(postgres.Open(dns), &gorm.Config{})
+	DB, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	// check connection
+	sqlDB, err := DB.DB()
+	if err != nil {
+		log.Fatalf("Failed to get raw database connection: %v", err)
+	}
+
+	// ping
+	err = sqlDB.Ping()
+	if err != nil {
+		log.Fatalf("Failed to ping database: %v", err)
+	}
+
 	// Auto migrate schema
-	err = DB.AutoMigrate(&models.User{}, &models.Organisation{}, &models.Rides{})
+	log.Println("Migarting Database Schemas")
+	err = DB.AutoMigrate(
+		&models.Organisation{},
+		&models.User{},
+		&models.Cars{},
+		&models.Rides{},
+	)
 	if err != nil {
 		log.Fatalf("Error migrating database: %s", err)
 	}
 
-	log.Println("Sucessfully connected to Postgres")
+	log.Println("Successfully connected to PostgreSQL")
 }

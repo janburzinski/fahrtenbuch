@@ -8,7 +8,10 @@ type Organisation struct {
 	ProfilePic string `json:"profilepic" binding:"required"`
 
 	//user
-	OwnerID *uint `json:"owner_id"`
-	Owner   *User `gorm:"foreignKey:UserID"`
-	//TODO: Store Array of Users (Participants)
+	OwnerID      uint
+	Owner        User   `gorm:"foreignKey:OwnerID"`
+	Participants []User `gorm:"foreignKey:OrganisationID"`
+
+	//cars
+	Cars []Cars `gorm:"foreignKey:OrganisationID"`
 }
