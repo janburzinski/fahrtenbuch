@@ -2,7 +2,6 @@ package redis
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"os"
 	"strconv"
@@ -30,7 +29,8 @@ func Initialize(client redis.Cmdable) *RedisClient {
 }
 
 func Connect() *redis.Client {
-	fmt.Print("Connecting to redis...")
+	log.Print("Connecting to redis...")
+
 	address := os.Getenv("REDIS_ADDRESS")
 	password := os.Getenv("REDIS_PASSWORD")
 	db, err := strconv.Atoi(os.Getenv("REDIS_DB"))
@@ -45,7 +45,17 @@ func Connect() *redis.Client {
 		DB:       db,
 	})
 
+	// create context with timeout so the ping doesnt take too long
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
 	// check redis connection
+	pong, err := client.Ping(ctx).Result()
+	if err != nil {
+		log.Fatalf("error while connecting to redis: %s", err)
+	}
+
+	log.Printf("Successfully connected to redis: %s", pong)
 
 	return client
 }

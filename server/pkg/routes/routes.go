@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"fahrtenbuch/pkg/handlers"
 	"log"
 	"os"
 	"time"
@@ -34,4 +35,6 @@ func SetupRoutes(app *fiber.App) {
 }
 
 func setupAuthRoutes(app fiber.Router) {
+	userHandler := handlers.NewUserHandler()
+	app.Post("/register", userHandler.Register)
 }
