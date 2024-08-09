@@ -37,4 +37,5 @@ func SetupRoutes(app *fiber.App) {
 func setupAuthRoutes(app fiber.Router) {
 	userHandler := handlers.NewUserHandler()
 	app.Post("/register", userHandler.Register)
+	app.Post("/login", userHandler.Login)
 }

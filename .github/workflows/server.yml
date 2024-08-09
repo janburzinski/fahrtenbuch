@@ -1,23 +1,36 @@
 name: CI
-
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
 
+env:
+  IS_PROD: false
+  SERVER_PORT: 8080
+  POSTGRES_USER: fahrtenbuchmiau_user
+  POSTGRES_HOST: localhost
+  POSTGRES_DATABASE: fahrtenbuch_db
+  POSTGRES_PASSWORD: fahrtenbuch_password
+  POSTGRES_PORT: 5432
+  REDIS_ADDR: localhost:6379
+  REDIS_PASSWORD: miau
+  REDIS_DB: 0
+  JwtSecret: sdfhkgbsdkjbgdsjhbgdsfg
+
 jobs:
   test-and-build:
     runs-on: ubuntu-latest
-
     services:
       redis:
         image: redis
-        env:
-          REDIS_PASSWORD: miau
-        options: >
-          --requirepass my_redis_password
-
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
       postgres:
         image: postgres
         env:
@@ -34,10 +47,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v4
         with:
           go-version: "stable"
 
@@ -45,26 +58,7 @@ jobs:
         run: go mod download
         working-directory: server
 
-      - name: Wait for PostgreSQL
-        run: |
-          until pg_isready -h localhost -p 5432; do
-            echo "Waiting for PostgreSQL to be ready..."
-            sleep 1
-          done
-
       - name: Run tests
-        env:
-          IS_PROD: false
-          SERVER_PORT: 8080
-          POSTGRES_USER: fahrtenbuchmiau_user
-          POSTGRES_HOST: localhost
-          POSTGRES_DATABASE: fahrtenbuch_db
-          POSTGRES_PASSWORD: fahrtenbuch_password
-          POSTGRES_PORT: 5432
-          REDIS_ADDR: localhost:6379
-          REDIS_PASSWORD: miau
-          REDIS_DB: 0
-          JwtSecret: sdfhkgbsdkjbgdsjhbgdsfg
         run: go test ./...
         working-directory: server
 

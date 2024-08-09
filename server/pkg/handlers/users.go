@@ -36,9 +36,8 @@ func (uh *UserHandler) Register(c *fiber.Ctx) error {
 	}
 	user.Password = hashedPassword
 
-	result := db.DB.Create(&user)
-	if result.Error != nil {
-		return c.Status(fiber.StatusInternalServerError).SendString(result.Error.Error())
+	if err := db.DB.Create(&user).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
 	}
 
 	return c.JSON(user)
