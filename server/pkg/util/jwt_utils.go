@@ -50,7 +50,7 @@ func CreateToken(userId string, accessToken bool) (string, error) {
 	}
 }
 
-func VerifyToken(tokenString string, accessToken bool) error {
+func VerifyToken(tokenString string) error {
 	token, err := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
 		return jwtSecret, nil
 	})

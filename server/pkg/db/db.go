@@ -7,13 +7,14 @@ import (
 	"os"
 
 	"gorm.io/driver/postgres"
+	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
 var DB *gorm.DB
 
 // initialize database connection
-func Init() {
+func Init(testing bool) {
 	log.Println("Establishing Database connection...")
 
 	username := os.Getenv("POSTGRES_USER")
@@ -31,9 +32,16 @@ func Init() {
 		username, password, host, port, databaseName, sslmode)
 
 	var err error
-	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
-	if err != nil {
-		log.Fatal(err)
+	if !testing {
+		DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+		if err != nil {
+			log.Fatal(err)
+		}
+	} else {
+		DB, err = gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
+		if err != nil {
+			log.Fatalf("Failed to connect to database: %v", err)
+		}
 	}
 
 	// check connection

@@ -13,7 +13,7 @@ func TestGenerateAndVerifyJWT(t *testing.T) {
 		access bool
 	}{
 		{true},
-		{false},
+		{false}, //TODO: remove multiple test cases
 	}
 
 	for _, tt := range tests {
@@ -26,7 +26,7 @@ func TestGenerateAndVerifyJWT(t *testing.T) {
 				t.Fail()
 			}
 
-			err = VerifyToken(token, tt.access)
+			err = VerifyToken(token)
 			if err != nil {
 				t.Logf("error while verifying access token: %s", err.Error())
 				t.Fail()

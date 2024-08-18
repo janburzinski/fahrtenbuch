@@ -10,10 +10,6 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-const (
-	maxCookieAge = 1000 * 60 * 60 * 24 * 365 * 10 // 10 years
-)
-
 // use for dependency injection etc. later on
 type UserHandler struct{}
 
@@ -29,6 +25,12 @@ func (uh *UserHandler) Register(c *fiber.Ctx) error {
 			Error: err.Error(),
 		}
 		return c.Status(fiber.StatusBadRequest).JSON(errResp)
+	}
+
+	// check if the given email is valid
+	valid := util.ValidEmail(user.Email)
+	if !valid {
+		// TODO: CHECK IF THE EMAIL IS VALID
 	}
 
 	// check if email already exists
@@ -122,6 +124,18 @@ func (uh *UserHandler) Login(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(errorResp)
 	}
 
+	// set access token
+	c.Cookie(&fiber.Cookie{
+		Name:     "jwt_token",
+		Value:    accessToken,
+		Expires:  time.Now().Add(time.Minute * 15),
+		HTTPOnly: util.IsProd,
+		Secure:   true,
+		SameSite: fiber.CookieSameSiteLaxMode,
+		MaxAge:   15 * 60, // 15 minutes
+	})
+
+	// generate refresh token
 	refreshToken, err := util.CreateToken(userId, false)
 	if err != nil {
 		errorResp := ErrorResponse{
@@ -136,21 +150,10 @@ func (uh *UserHandler) Login(c *fiber.Ctx) error {
 		Name:     "jwt_refresh_token",
 		Value:    refreshToken,
 		Expires:  time.Now().Add(time.Hour * 720),
-		HTTPOnly: true,
+		HTTPOnly: util.IsProd,
 		Secure:   true,
 		SameSite: fiber.CookieSameSiteLaxMode,
-		MaxAge:   maxCookieAge, // 10 years
-	})
-
-	// access token
-	c.Cookie(&fiber.Cookie{
-		Name:     "jwt_token",
-		Value:    accessToken,
-		Expires:  time.Now().Add(time.Minute * 15),
-		HTTPOnly: true,
-		Secure:   true,
-		SameSite: fiber.CookieSameSiteLaxMode,
-		MaxAge:   maxCookieAge, // 10 years
+		MaxAge:   util.MaxCookieAge, // 10 years
 	})
 
 	successResp := SuccessResponse{
@@ -161,7 +164,7 @@ func (uh *UserHandler) Login(c *fiber.Ctx) error {
 }
 
 func (uh *UserHandler) Me(c *fiber.Ctx) error {
-	token := c.Cookies("jwt_token")
+	token := c.Cookies("jwt_refresh_token") // get user id from jwt token (refreshtoken => longer ttl)
 	userId, err := util.GetUserIdFromJWT(token)
 	if err != nil {
 		errorResp := ErrorResponse{
@@ -170,8 +173,6 @@ func (uh *UserHandler) Me(c *fiber.Ctx) error {
 		}
 		return c.Status(fiber.StatusBadRequest).JSON(errorResp)
 	}
-
-	//todo: verify userId and jwt token
 
 	var user models.User
 	result := db.DB.Where("id = ?", userId).First(&user)

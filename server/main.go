@@ -116,7 +116,7 @@ func main() {
 	go scheduleLogRotation()
 
 	// init postgres connection
-	db.Init()
+	db.Init(false)
 
 	// init redis connection
 	client := redis.Connect()
