@@ -61,7 +61,7 @@ func TestRegisterRequest(t *testing.T) {
 		},
 	}
 
-	app := setupTest()
+	app := setupTest(t)
 	route := "/register"
 
 	validEmail := generateEmail(true)
@@ -69,8 +69,32 @@ func TestRegisterRequest(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.description, func(t *testing.T) {
+			if tt.validEmail {
+				fullname, err := util.GenerateRandomString(12)
+				if err != nil {
+					t.Errorf("error while generating fullname: %s", err.Error())
+					return
+				}
+				password, err := util.GenerateRandomString(12)
+				if err != nil {
+					t.Errorf("error while generating password: %s", err.Error())
+					return
+				}
+				phone := util.GenerateRandomPhoneNumber()
 
-			req := httptest.NewRequest("POST", route, nil)
+				data := map[string]string{
+					"email":    validEmail,
+					"fullname": fullname,
+					"password": password,
+					"phone":    phone,
+				}
+
+				req := httptest.NewRequest("POST", route, data)
+			} else if tt.validEmail && tt.description == "try registering with an already existant email" {
+
+			} else {
+
+			}
 		})
 	}
 }

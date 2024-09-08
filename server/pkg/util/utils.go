@@ -2,6 +2,7 @@ package util
 
 import (
 	"crypto/rand"
+	"fmt"
 	"math/big"
 	"os"
 	"regexp"
@@ -35,6 +36,21 @@ func GenerateRandomString(length int) (string, error) {
 		result[i] = letters[num.Int64()]
 	}
 	return string(result), nil
+}
+
+func GenerateRandomInt(min, max int64) int64 {
+	nBig, err := rand.Int(rand.Reader, big.NewInt(max-min+1))
+	if err != nil {
+		panic(err)
+	}
+	return nBig.Int64() + min
+}
+
+func GenerateRandomPhoneNumber() string {
+	areaCode := GenerateRandomInt(1, 999)
+	rest := GenerateRandomInt(1, 999)
+
+	return fmt.Sprintf("(%03d) %03d-%04d", areaCode, rest, rest)
 }
 
 func ValidEmail(email string) bool {

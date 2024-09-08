@@ -2,6 +2,7 @@ package main
 
 import (
 	"fahrtenbuch/pkg/db"
+	"fahrtenbuch/pkg/firebase"
 	"fahrtenbuch/pkg/redis"
 	"fahrtenbuch/pkg/routes"
 	"fmt"
@@ -114,6 +115,13 @@ func main() {
 
 	// schedule log rotation
 	go scheduleLogRotation()
+
+	// init firebase
+	credentialsFile := "firebase-config.json"
+	_, err = firebase.InitializeFirebase(credentialsFile)
+	if err != nil {
+		log.Fatalf("Failed to initialize firebase app: %v", err)
+	}
 
 	// init postgres connection
 	db.Init(false)

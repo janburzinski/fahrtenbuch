@@ -10,7 +10,6 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-// use for dependency injection etc. later on
 type UserHandler struct{}
 
 func NewUserHandler() *UserHandler {
@@ -30,7 +29,11 @@ func (uh *UserHandler) Register(c *fiber.Ctx) error {
 	// check if the given email is valid
 	valid := util.ValidEmail(user.Email)
 	if !valid {
-		// TODO: CHECK IF THE EMAIL IS VALID
+		errResp := ErrorResponse{
+			OK:    false,
+			Error: "invalid email",
+		}
+		return c.Status(fiber.StatusBadRequest).JSON(errResp)
 	}
 
 	// check if email already exists
