@@ -110,3 +110,8 @@ go.work.sum
 .env
 
 firebase-config.json
+
+.DS_Store
+.idea
+
+FirebaseConfig.ts

@@ -47,27 +47,8 @@ func (uh *UserHandler) Register(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(errResp)
 	}
 
-	// all good, so hash the password
-	p := &util.Argon2Params{
-		Memory:      64 * 1024,
-		Iterations:  3,
-		Parallelism: 2,
-		SaltLength:  16,
-		KeyLength:   32,
-	}
-
-	// hash the password
-	hashedPassword, err := util.GenerateFromPassword(user.Password, p)
-	if err != nil {
-		errResp := ErrorResponse{
-			OK:    false,
-			Error: err.Error(),
-		}
-		return c.Status(fiber.StatusInternalServerError).JSON(errResp)
-	}
-	user.Password = hashedPassword
-
 	// create the user
+	//user.FirebaseUID = registeredUser.UID
 	if err := db.DB.Create(&user).Error; err != nil {
 		errResp := ErrorResponse{
 			OK:    false,
@@ -78,7 +59,7 @@ func (uh *UserHandler) Register(c *fiber.Ctx) error {
 
 	resp := SuccessResponse{
 		OK:      true,
-		Message: "user was successfully created",
+		Message: "User was successfully created",
 	}
 	return c.JSON(resp)
 }
@@ -107,14 +88,14 @@ func (uh *UserHandler) Login(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusNotFound).JSON(errorResp)
 	}
 
-	match, err := util.ComparePasswordAndHash(input.Password, user.Password)
-	if err != nil || !match {
-		errorResp := ErrorResponse{
-			OK:    false,
-			Error: "incorrect login data",
-		}
-		return c.Status(fiber.StatusBadRequest).JSON(errorResp)
-	}
+	// match, err := util.ComparePasswordAndHash(input.Password, user.Password)
+	// if err != nil || !match {
+	// errorResp := ErrorResponse{
+	// OK:    false,
+	// Error: "incorrect login data",
+	// }
+	// return c.Status(fiber.StatusBadRequest).JSON(errorResp)
+	// }
 
 	// generate jwt and set as cookie / local storage
 	userId := fmt.Sprintf("%d", user.ID)

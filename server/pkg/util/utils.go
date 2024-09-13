@@ -2,7 +2,9 @@ package util
 
 import (
 	"crypto/rand"
+	"encoding/binary"
 	"fmt"
+	"math"
 	"math/big"
 	"os"
 	"regexp"
@@ -56,4 +58,19 @@ func GenerateRandomPhoneNumber() string {
 func ValidEmail(email string) bool {
 	emailRegex := regexp.MustCompile(`^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,4}$`)
 	return emailRegex.MatchString(email)
+}
+
+func generateRandomFloat64() float64 {
+	var b [8]byte
+	_, err := rand.Read(b[:])
+	if err != nil {
+		panic(err)
+	}
+	return float64(binary.LittleEndian.Uint64(b[:])) / math.MaxUint64
+}
+
+func GenerateRandomCoordinates() (lat, long float64) {
+	lat = (generateRandomFloat64() * 180) - 90
+	long = (generateRandomFloat64() * 360) - 180
+	return
 }

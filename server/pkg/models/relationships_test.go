@@ -1,6 +1,8 @@
 package models
 
 import (
+	"fahrtenbuch/pkg/util"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -30,8 +32,8 @@ func TestUserModel(t *testing.T) {
 			Fullname: "John Doe",
 			Email:    "john@example.com",
 			Phone:    "1234567890",
-			Password: "password123",
-			Rank:     "user",
+			// Password: "password123",
+			Rank: "user",
 		}
 
 		result := db.Create(&user)
@@ -47,10 +49,10 @@ func TestUserModel(t *testing.T) {
 	t.Run("Create user with invalid rank", func(t *testing.T) {
 		user := User{
 			Fullname: "Jane Doe",
-			Email:    "jane@example.com",
+			Email:    "jane2@example.com",
 			Phone:    "0987654321",
-			Password: "password456",
-			Rank:     "invalid_rank",
+			// Password: "password456",
+			Rank: "invalid_rank",
 		}
 
 		result := db.Create(&user)
@@ -66,16 +68,16 @@ func TestUserModel(t *testing.T) {
 			Fullname: "User One",
 			Email:    "duplicate@example.com",
 			Phone:    "1111111111",
-			Password: "password1",
-			Rank:     "user",
+			// Password: "password1",
+			Rank: "user",
 		}
 
 		user2 := User{
 			Fullname: "User Two",
 			Email:    "duplicate@example.com",
 			Phone:    "2222222222",
-			Password: "password2",
-			Rank:     "user",
+			// Password: "password2",
+			Rank: "user",
 		}
 
 		db.Create(&user1)
@@ -94,8 +96,8 @@ func TestOrganisationModel(t *testing.T) {
 			Fullname: "Owner",
 			Email:    "owner@example.com",
 			Phone:    "1234567890",
-			Password: "ownerpass",
-			Rank:     "owner",
+			// Password: "ownerpass",
+			Rank: "owner",
 		}
 
 		org := Organisation{
@@ -127,8 +129,18 @@ func TestOrganisationModel(t *testing.T) {
 		db.Create(&org)
 
 		participants := []User{
-			{Fullname: "User1", Email: "user1@example.com", Phone: "1111111111", Password: "pass1", Rank: "user"},
-			{Fullname: "User2", Email: "user2@example.com", Phone: "2222222222", Password: "pass2", Rank: "editor"},
+			{
+				Fullname: "User1",
+				Email:    "user1@example.com",
+				Phone:    "1111111111",
+				// Password: "pass1",
+				Rank: "user"},
+			{
+				Fullname: "User2",
+				Email:    "user2@example.com",
+				Phone:    "2222222222",
+				// Password: "pass2",
+				Rank: "editor"},
 		}
 
 		for i := range participants {
@@ -157,8 +169,8 @@ func TestUserOrganisationRelationship(t *testing.T) {
 			Fullname: "Owner User",
 			Email:    "owner@test.com",
 			Phone:    "9876543210",
-			Password: "ownerpass",
-			Rank:     "owner",
+			// Password: "ownerpass",
+			Rank: "owner",
 		}
 
 		// Create the owner first
@@ -205,10 +217,10 @@ func TestUserOrganisationRelationship(t *testing.T) {
 		db.Create(&org)
 
 		user := User{
-			Fullname:       "Member User",
-			Email:          "member@test.com",
-			Phone:          "5555555555",
-			Password:       "memberpass",
+			Fullname: "Member User",
+			Email:    "member@test.com",
+			Phone:    "5555555555",
+			// Password:       "memberpass",
 			Rank:           "user",
 			OrganisationID: &org.ID,
 		}
@@ -236,7 +248,7 @@ func TestCarModel(t *testing.T) {
 			Fullname: "Car Owner",
 			Email:    "carowner@example.com",
 			Phone:    "1234567890",
-			Password: "password123",
+			// Password: "password123",
 		}
 
 		db.Create(&user)
@@ -294,8 +306,8 @@ func TestCarModel(t *testing.T) {
 			Fullname: "Another User",
 			Email:    "another@example.com",
 			Phone:    "9876543210",
-			Password: "password456",
-			Rank:     "user",
+			// Password: "password456",
+			Rank: "user",
 		}
 
 		org := Organisation{
@@ -326,14 +338,14 @@ func TestCarModel(t *testing.T) {
 func TestRideModel(t *testing.T) {
 	db := setupTestDB(t)
 
-	t.Run("Create ride associated with a car", func(t *testing.T) {
+	t.Run("Create ride associated with a car and user", func(t *testing.T) {
 		// Create a user
 		user := User{
 			Fullname: "Ride User",
 			Email:    "rideuser@example.com",
 			Phone:    "1234567890",
-			Password: "password123",
-			Rank:     "user",
+			// Password: "password123",
+			Rank: "user",
 		}
 		db.Create(&user)
 
@@ -341,27 +353,63 @@ func TestRideModel(t *testing.T) {
 		car := Cars{
 			Name:         "Tesla Model 3",
 			Type:         "pkw",
-			LicensePlate: "EV123",
+			LicensePlate: "B EV 123",
 			UserID:       &user.ID,
 		}
 		db.Create(&car)
 
 		// Create a ride
 		description := "A test ride"
-		rideFrom := "Home"
-		rideTo := "Work"
-		distance := "30km"
+		lat1, long1 := util.GenerateRandomCoordinates()
+		lat2, long2 := util.GenerateRandomCoordinates()
+		lat3, long3 := util.GenerateRandomCoordinates()
+		lat4, long4 := util.GenerateRandomCoordinates()
+		rideFrom := Location{
+			Name:       "Home",
+			Address:    "",
+			PostalCode: "",
+			Latitude:   fmt.Sprintf("%.6f", lat2),
+			Longitude:  fmt.Sprintf("%.6f", long2),
+		}
+		rideTo := Location{
+			Name:       "Work",
+			Address:    "",
+			PostalCode: "",
+			Latitude:   fmt.Sprintf("%.6f", lat3),
+			Longitude:  fmt.Sprintf("%.6f", long3),
+		}
 		ride := Rides{
 			Title:       "Morning Commute",
 			Description: &description,
-			RideFrom:    &rideFrom,
-			RideTo:      &rideTo,
-			Stops:       []string{"Coffee Shop", "Gas Station"},
-			Distance:    &distance,
-			BeginTime:   "2024-08-02T08:00:00Z",
-			EndTime:     "2024-08-02T09:00:00Z",
-			Category:    "Work",
-			CarID:       car.ID,
+			RideFrom:    rideFrom,
+			RideTo:      rideTo,
+			Stops: []Stop{
+				{
+					Location: Location{
+						Name:       "Coffee",
+						Address:    "Kaffeemiau Platz 1",
+						PostalCode: "23485 Berlin",
+						Latitude:   fmt.Sprintf("%.6f", lat4),
+						Longitude:  fmt.Sprintf("%.6f", long4),
+					},
+					Order: 0,
+				},
+				{
+					Location: Location{
+						Name:       "Fuel",
+						Address:    "Tankstelle Straße 1",
+						PostalCode: "48392 Potsdamm",
+						Latitude:   fmt.Sprintf("%.6f", lat1),
+						Longitude:  fmt.Sprintf("%.6f", long1),
+					},
+					Order: 1,
+				},
+			},
+			StartTime: "2024-05-03 15:04:05",
+			EndTime:   "2024-05-03 17:20:55",
+			Category:  "Work",
+			CarID:     car.ID,
+			UserID:    &user.ID,
 		}
 
 		result := db.Create(&ride)
@@ -387,10 +435,11 @@ func TestRideModel(t *testing.T) {
 		ride := Rides{
 			Title:       "Invalid Ride",
 			Description: &description,
-			BeginTime:   "2024-08-02T10:00:00Z",
+			StartTime:   "2024-08-02T10:00:00Z",
 			EndTime:     "2024-08-02T11:00:00Z",
 			Category:    "Personal",
 			// CarID is not set
+			// user not set
 		}
 
 		result := db.Create(&ride)

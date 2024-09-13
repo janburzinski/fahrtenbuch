@@ -16,21 +16,22 @@ var validRanks = map[string]bool{
 
 type User struct {
 	gorm.Model
-	RefreshTokenVersion int `json:"refresh_token_version"`
+
+	FirebaseUID string `json:"firebase_uid"`
 
 	Fullname string `json:"fullname" binding:"required"`
 	Email    string `json:"email" binding:"required" gorm:"unique;not null"`
 	Phone    string `json:"phone"`
-	Password string `json:"password" binding:"required" gorm:"not null"`
+	//Password string `json:"password" binding:"required" gorm:"not null"`
 
-	//organisation
+	// organisation
 	OrganisationID      *uint
 	Organisation        *Organisation `gorm:"foreignKey:OrganisationID;references:ID"`
 	Rank                string
 	OwnedOrganisationID *uint
 	OwnedOrganisation   *Organisation `gorm:"foreignKey:OwnedOrganisationID;references:ID"`
 
-	//cars
+	// cars
 	Cars []Cars `gorm:"foreignKey:UserID"`
 }
 
