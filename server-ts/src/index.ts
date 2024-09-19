@@ -3,6 +3,9 @@ import dotenv from "dotenv";
 import path from "path";
 import cors from "cors";
 import { appRouter } from "./appRouter";
+import bodyParser from "body-parser";
+import { loggerMiddleware } from "./middleware/loggerMiddleware";
+import { faviconMiddleware } from "./middleware/faviconMiddleware";
 
 const main = () => {
   const app = express();
@@ -34,15 +37,22 @@ const main = () => {
     allowedHeaders: ["Content-Type", "Authorization"],
   };
 
+  //init normal express stuff
   app.use(cors(corsOptions));
-  app.use(express.json());
+  app.use(bodyParser.urlencoded({ extended: true }));
+  app.use(bodyParser.json());
+
+  //init middlewares
+  app.use(loggerMiddleware);
+  app.use(faviconMiddleware);
 
   // init app router
-  app.use("/api/v1", appRouter);
+  app.use("/api/v1", appRouter());
 
+  //start express server
   const port = process.env.SERVER_PORT || 8080;
   app.listen(port, () => {
-    console.log(`Server is running on http://localhost:${port}`);
+    console.log(`Server is running on :${port}`);
   });
 };
 
