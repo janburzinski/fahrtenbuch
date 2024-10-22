@@ -19,6 +19,11 @@ type LoggerMessage struct {
 	Timestamp string `json:"timestamp"`
 }
 
+// automatically log to json file whenever a panic occurs
+func RecoverAndLog() {
+
+}
+
 func Log(level string, message string) {
 	//write log to file
 	file, err := os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
