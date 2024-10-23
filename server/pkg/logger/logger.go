@@ -3,10 +3,16 @@ package logger
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"log"
 	"os"
 	"strings"
 	"time"
+)
+
+const (
+	LOG_INFO  = "INFO"
+	LOG_DEBUG = "DEBUG"
+	LOG_ERROR = "ERROR"
 )
 
 var (
@@ -32,6 +38,13 @@ func Log(level string, message string) {
 	}
 	defer file.Close()
 
+	//validate logger level
+	if level != LOG_INFO && level != LOG_DEBUG && level != LOG_ERROR {
+		log.Printf("ERROR: Got a wrong LOG LEVEL. Got: %s, Changed to: %s", level, "INFO")
+		level = "INFO"
+	}
+
+	//build json struct
 	logMsg := LoggerMessage{
 		Level:     level,
 		Message:   message,
@@ -51,29 +64,32 @@ func Log(level string, message string) {
 
 	var newContent string
 	if len(content) == 0 {
-		// If the file is empty, start a new JSON array
+		//if the file is empty, start a new JSON array
 		newContent = "[\n" + string(jsonMessage) + "\n]"
 	} else {
-		// If the file is not empty, append the new log message
+		//if the file is not empty, append the new log message
 		contentStr := strings.TrimSpace(string(content))
 		if strings.HasSuffix(contentStr, "]") {
-			// Remove the closing bracket
+			//remove the closing bracket
 			contentStr = contentStr[:len(contentStr)-1]
 			newContent = contentStr + ",\n" + string(jsonMessage) + "\n]"
 		} else {
-			// Handle unexpected content
 			panic("Invalid log file format")
 		}
 	}
 
-	// Write the updated content back to the file
-	err = ioutil.WriteFile(filePath, []byte(newContent), 0644)
-	if err != nil {
-		panic(err)
-	}
+	// write the updated content back to the file
+	// but dont log debug messages if in prod env
+	currEnv := os.Getenv("GO_ENV")
+	if currEnv != "debug" {
+		err = os.WriteFile(filePath, []byte(newContent), 0644)
+		if err != nil {
+			panic(err)
+		}
 
-	//also output into console
-	fmt.Println(string(jsonMessage))
+		//also output into console
+		fmt.Println(string(jsonMessage))
+	}
 }
 
 func CreateLoggerDir() error {

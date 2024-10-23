@@ -5,19 +5,6 @@ on:
   pull_request:
     branches: [main]
 
-env:
-  IS_PROD: false
-  SERVER_PORT: 8080
-  POSTGRES_USER: fahrtenbuchmiau_user
-  POSTGRES_HOST: localhost
-  POSTGRES_DATABASE: fahrtenbuch_db
-  POSTGRES_PASSWORD: fahrtenbuch_password
-  POSTGRES_PORT: 5432
-  REDIS_ADDR: localhost:6379
-  REDIS_PASSWORD: miau
-  REDIS_DB: 0
-  JwtSecret: sdfhkgbsdkjbgdsjhbgdsfg
-
 jobs:
   test-and-build:
     runs-on: ubuntu-latest
@@ -31,16 +18,17 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-      postgres:
-        image: postgres
+      mysql:
+        image: mysql:latest
         env:
-          POSTGRES_DB: fahrtenbuch_db
-          POSTGRES_USER: fahrtenbuchmiau_user
-          POSTGRES_PASSWORD: fahrtenbuch_password
+          MYSQL_ROOT_PASSWORD: root_password
+          MYSQL_DATABASE: test_db
+          MYSQL_USER: test_user
+          MYSQL_PASSWORD: test_password
         ports:
-          - 5432:5432
+          - 3306:3306
         options: >-
-          --health-cmd pg_isready
+          --health-cmd "mysqladmin ping -h localhost"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -59,6 +47,8 @@ jobs:
         working-directory: server
 
       - name: Run tests
+        env:
+          MYSQL_TEST_DSN: "test_user:test_password@tcp(localhost:3306)/test_db"
         run: go test ./...
         working-directory: server
 

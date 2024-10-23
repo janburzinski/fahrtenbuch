@@ -1,9 +1,11 @@
 package db
 
 import (
+	"context"
 	"database/sql"
 	"os"
 	"server/pkg/logger"
+	"server/pkg/models"
 
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/mysqldialect"
@@ -30,6 +32,12 @@ func Connect() error {
 		return err
 	}
 
+	//run model migration
+	err = runMigrations()
+	if err != nil {
+		return err
+	}
+
 	logger.Log("INFO", "Successfully connected to the MySQL Database!")
 
 	return nil
@@ -37,5 +45,13 @@ func Connect() error {
 
 func testConnection() error {
 	err := db.Ping()
+	return err
+}
+
+func runMigrations() error {
+	ctx := context.Background()
+
+	_, err := db.NewCreateTable().Model((*models.User)(nil)).IfNotExists().Exec(ctx)
+	//todo: update and follow docs: https://bun.uptrace.dev/guide/starter-kit.html#app-structure
 	return err
 }
