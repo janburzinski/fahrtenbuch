@@ -27,6 +27,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	logger.Log("INFO", "Successfully connected to the MySQL Database!")
 
 	// init web server
 	r := gin.Default()

@@ -1,4 +1,4 @@
 Stack:
 
 - GIN Framework
-- BUN MySQL ORM
+- GORM MySQL ORM

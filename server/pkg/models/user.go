@@ -1,23 +1,12 @@
 package models
 
-import (
-	"time"
-
-	"github.com/uptrace/bun"
-)
-
 type User struct {
-	bun.BaseModel `bun:"table:users,alias:u"`
+	BaseModel
 
-	ID        int64     `bun:",pk,autoincrement"`
-	CreatedAt time.Time `bun:",nullzero,notnull,default:current_timestamp"`
-	UpdatedAt bun.NullTime
-	DeletedAt time.Time `bun:",soft_delete"`
+	FirstName string `gorm:"not null"`
+	LastName  string `gorm:"not null"`
+	Email     string `gorm:"uniqueIndex;not null"`
+	Password  string `gorm:"not null"`
 
-	FirstName string
-	LastName  string
-	Email     string `bun:",unique"`
-	Password  string
-
-	Cars []*Cars `bun:"rel:has-many,join:id=user_id"`
+	Cars []Cars `gorm:"foreignKey:UserID"`
 }

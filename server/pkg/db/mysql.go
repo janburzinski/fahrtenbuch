@@ -1,30 +1,40 @@
 package db
 
 import (
-	"context"
-	"database/sql"
+	"log"
 	"os"
-	"server/pkg/logger"
 	"server/pkg/models"
+	"time"
 
-	"github.com/uptrace/bun"
-	"github.com/uptrace/bun/dialect/mysqldialect"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 var (
-	db *bun.DB
+	db *gorm.DB
 )
 
 func Connect() error {
-	//connect to db
+	//get mysql dsn from .env file
 	dsn := os.Getenv("MYSQL_DSN")
-	mysql, err := sql.Open("mysql", dsn)
-	if err != nil {
-		return err
-	}
 
-	db = bun.NewDB(mysql, mysqldialect.New())
-	defer db.Close()
+	//connect to db
+	newLogger := logger.New(
+		log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
+		logger.Config{
+			SlowThreshold:             time.Second, // Slow SQL threshold
+			LogLevel:                  logger.Info, // Log level
+			IgnoreRecordNotFoundError: true,        // Ignore ErrRecordNotFound error for logger
+			ParameterizedQueries:      true,        // Don't include params in the SQL log
+		},
+	)
+	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
+		Logger: newLogger,
+	})
+	if err != nil {
+		panic(err)
+	}
 
 	//test db connection
 	err = testConnection()
@@ -32,26 +42,24 @@ func Connect() error {
 		return err
 	}
 
-	//run model migration
-	err = runMigrations()
-	if err != nil {
-		return err
+	//auto migrate tables
+	if err := db.AutoMigrate(&models.User{}, &models.Cars{}, &models.Rides{}); err != nil {
+		panic(err)
 	}
-
-	logger.Log("INFO", "Successfully connected to the MySQL Database!")
 
 	return nil
 }
 
 func testConnection() error {
-	err := db.Ping()
-	return err
-}
+	sqlDB, err := db.DB()
+	if err != nil {
+		return err
+	}
+	defer sqlDB.Close()
 
-func runMigrations() error {
-	ctx := context.Background()
+	if err = sqlDB.Ping(); err != nil {
+		return err
+	}
 
-	_, err := db.NewCreateTable().Model((*models.User)(nil)).IfNotExists().Exec(ctx)
-	//todo: update and follow docs: https://bun.uptrace.dev/guide/starter-kit.html#app-structure
-	return err
+	return nil
 }
