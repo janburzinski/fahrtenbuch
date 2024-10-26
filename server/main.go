@@ -1,10 +1,10 @@
 package main
 
 import (
-	"server/pkg/db"
+	"os"
 	"server/pkg/logger"
+	"server/pkg/router"
 
-	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
 
@@ -23,19 +23,23 @@ func main() {
 	logger.Log("DEBUG", "Successfully initialized the Logger")
 
 	//init db
-	err = db.Connect()
-	if err != nil {
-		panic(err)
-	}
+	//err = db.Connect()
+	//if err != nil {
+	//		panic(err)
+	//	}
 	logger.Log("INFO", "Successfully connected to the MySQL Database!")
 
-	// init web server
-	r := gin.Default()
-	r.GET("/ping", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "pong",
-		})
-	})
+	// init routes and start web server
+	router := router.InitializeRoutes()
+	appPort := getAppPort()
+	router.Run(appPort)
+}
 
-	r.Run() //:8080
+func getAppPort() string {
+	if appPort, has := os.LookupEnv("SERVER_PORT"); !has {
+		logger.Log(logger.LOG_WARN, "Environmental Variable 'SERVER_PORT' was not set, using :8080")
+		return ":8080"
+	} else {
+		return ":" + appPort
+	}
 }

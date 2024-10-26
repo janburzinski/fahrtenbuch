@@ -13,6 +13,7 @@ const (
 	LOG_INFO  = "INFO"
 	LOG_DEBUG = "DEBUG"
 	LOG_ERROR = "ERROR"
+	LOG_WARN  = "WARNING"
 )
 
 var (
@@ -30,7 +31,7 @@ func RecoverAndLog() {
 
 }
 
-func Log(level string, message string) {
+func Log(level string, message string, args ...interface{}) {
 	//write log to file
 	file, err := os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
@@ -39,7 +40,7 @@ func Log(level string, message string) {
 	defer file.Close()
 
 	//validate logger level
-	if level != LOG_INFO && level != LOG_DEBUG && level != LOG_ERROR {
+	if level != LOG_INFO && level != LOG_DEBUG && level != LOG_ERROR && level != LOG_WARN {
 		log.Printf("ERROR: Got a wrong LOG LEVEL. Got: %s, Changed to: %s", level, "INFO")
 		level = "INFO"
 	}
@@ -47,7 +48,7 @@ func Log(level string, message string) {
 	//build json struct
 	logMsg := LoggerMessage{
 		Level:     level,
-		Message:   message,
+		Message:   fmt.Sprintf(message, args...),
 		Timestamp: time.Now().Format(time.RFC3339),
 	}
 
@@ -86,10 +87,10 @@ func Log(level string, message string) {
 		if err != nil {
 			panic(err)
 		}
-
-		//also output into console
-		fmt.Println(string(jsonMessage))
 	}
+
+	//also output into console
+	fmt.Println(string(jsonMessage))
 }
 
 func CreateLoggerDir() error {

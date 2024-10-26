@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	db *gorm.DB
+	DB *gorm.DB
 )
 
 func Connect() error {
@@ -29,7 +29,7 @@ func Connect() error {
 			ParameterizedQueries:      true,        // Don't include params in the SQL log
 		},
 	)
-	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
+	DB, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
 		Logger: newLogger,
 	})
 	if err != nil {
@@ -43,7 +43,7 @@ func Connect() error {
 	}
 
 	//auto migrate tables
-	if err := db.AutoMigrate(&models.User{}, &models.Cars{}, &models.Rides{}); err != nil {
+	if err := DB.AutoMigrate(&models.User{}, &models.Cars{}, &models.Rides{}); err != nil {
 		panic(err)
 	}
 
@@ -51,7 +51,7 @@ func Connect() error {
 }
 
 func testConnection() error {
-	sqlDB, err := db.DB()
+	sqlDB, err := DB.DB()
 	if err != nil {
 		return err
 	}

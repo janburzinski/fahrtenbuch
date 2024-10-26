@@ -53,7 +53,32 @@ func TestLogger(t *testing.T) {
 	}
 }
 
-func TestLoggerWithInvalidLe(t *testing.T) {
+func TestLoggerWithArgs(t *testing.T) {
+	setupTest(t)
+
+	// Now actually test the logger
+	testLogMessage := "test"
+	Log(LOG_INFO, "test: %s", testLogMessage)
+
+	// Check the content of the log message
+	content, err := os.ReadFile(filePath)
+	if err != nil {
+		t.Fatalf("Error while reading test file: %s", err.Error())
+	}
+
+	var logMessages []LoggerMessage //this has to be an array because the of the way the json struct gets saved into the json file
+	err = json.Unmarshal(content, &logMessages)
+	if err != nil {
+		t.Fatalf("Error while converting file content to json: %s", err.Error())
+	}
+
+	expectedLogMessage := "test: test"
+	if len(logMessages) == 0 || logMessages[0].Level != "INFO" || logMessages[0].Message != expectedLogMessage {
+		t.Fatalf("The content of the log file were wrong. expected: %s, %s, got: %s, %s", "INFO", testLogMessage, logMessages[0].Level, logMessages[0].Message)
+	}
+}
+
+func TestLoggerWithInvalidLevel(t *testing.T) {
 	var buf bytes.Buffer
 	log.SetOutput(&buf)
 	defer func() {
